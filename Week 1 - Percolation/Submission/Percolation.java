@@ -1,7 +1,7 @@
 /* *****************************************************************************
- *  Name:
- *  Date:
- *  Description:
+ *  Name: Marcio TEDESCO
+ *  Date: 20/03/2020
+ *  Description: Percolation
  **************************************************************************** */
 
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
@@ -12,9 +12,9 @@ public class Percolation {
     private final int virtualbottom;
     private final int n; //widht & height of the grid
 
-    private int[][] grid;
+    private boolean[][] grid;
     private int openSites;
-    private WeightedQuickUnionUF weightedQuickUnionUF;
+    private final WeightedQuickUnionUF weightedQuickUnionUF;
 
     // creates n-by-n grid, with all sites initially blocked
     public Percolation(int n) {
@@ -28,11 +28,11 @@ public class Percolation {
 
         //create an extra colum, row to handle with the 1-based indexing of the perco grid
         //grid = new int[n + 1][n + 1];
-        grid = new int[n][n];
+        grid = new boolean[n][n];
 
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++) {
-                grid[i][j] = 0;
+                grid[i][j] = false;
             }
 
         openSites = 0;
@@ -41,14 +41,14 @@ public class Percolation {
         weightedQuickUnionUF = new WeightedQuickUnionUF(n * n + 2);
 
         //connect virtual top to first row
-        for (int i = 0; i < n; i++) {
-            weightedQuickUnionUF.union(xyTo1D(0, i), virtualtop);
-        }
+        //for (int i = 0; i < n; i++) {
+        //    weightedQuickUnionUF.union(xyTo1D(0, i), virtualtop);
+        //}
 
         //connect virtual top to last row
-        for (int i = 0; i < n; i++) {
-            weightedQuickUnionUF.union(xyTo1D(n - 1, i), virtualbottom);
-        }
+        //for (int i = 0; i < n; i++) {
+        //    weightedQuickUnionUF.union(xyTo1D(n - 1, i), virtualbottom);
+        //}
     }
 
     // opens the site (row, col) if it is not open already
@@ -62,28 +62,35 @@ public class Percolation {
             throw new IllegalArgumentException();
 
         //check if already opened
-        if (grid[row][col] == 1) {
+        if (grid[row][col] == true) {
             //System.out.println("row: " + row + ", col: " + col + " already opened");
             return;
         }
 
         //open a site
-        grid[row][col] = 1;
+        grid[row][col] = true;
         openSites++;
 
+        //connect to virtual top
+        if (row == 0)
+            weightedQuickUnionUF.union(xyTo1D(row, col), virtualtop);
+
+        //connect to virtual bottom
+        if (row == n - 1)
+            weightedQuickUnionUF.union(xyTo1D(row, col), virtualbottom);
+
         //links the site with max 4 open neighbors
-        if (areIndicesValid(row - 1, col) && grid[row - 1][col] == 1)
+        if (areIndicesValid(row - 1, col) && grid[row - 1][col] == true)
             weightedQuickUnionUF.union(xyTo1D(row - 1, col), xyTo1D(row, col));
 
-        if (areIndicesValid(row, col - 1) && grid[row][col - 1] == 1)
+        if (areIndicesValid(row, col - 1) && grid[row][col - 1] == true)
             weightedQuickUnionUF.union(xyTo1D(row, col - 1), xyTo1D(row, col));
 
-        if (areIndicesValid(row + 1, col) && grid[row + 1][col] == 1)
+        if (areIndicesValid(row + 1, col) && grid[row + 1][col] == true)
             weightedQuickUnionUF.union(xyTo1D(row + 1, col), xyTo1D(row, col));
 
-        if (areIndicesValid(row, col + 1) && grid[row][col + 1] == 1)
+        if (areIndicesValid(row, col + 1) && grid[row][col + 1] == true)
             weightedQuickUnionUF.union(xyTo1D(row, col + 1), xyTo1D(row, col));
-
 
     }
 
@@ -96,7 +103,7 @@ public class Percolation {
         if (!areIndicesValid(row, col))
             throw new IllegalArgumentException();
 
-        return grid[row][col] == 1;
+        return grid[row][col] == true;
     }
 
     // is the site (row, col) full?
