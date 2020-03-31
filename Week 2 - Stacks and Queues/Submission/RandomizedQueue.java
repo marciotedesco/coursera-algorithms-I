@@ -18,8 +18,8 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     private int insertCursor;
     private int nullHit;
     private int nullCount;
-    private final int NULL_HIT_THRESHOLD = 10;
-    private final double NULL_COUNT_TRESHOLD = 0.5;
+    private static final int NULL_HIT_THRESHOLD = 10;
+    private static final double NULL_COUNT_TRESHOLD = 0.5;
 
     // construct an empty randomized queue
     public RandomizedQueue() {
@@ -102,7 +102,13 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         if (size == 0)
             throw new NoSuchElementException();
 
-        return array[StdRandom.uniform(size)];
+        // guarantees it only returns non-null elements
+        Item item = null;
+        while (item == null) {
+            item = array[StdRandom.uniform(size)];
+        }
+
+        return item;
     }
 
     // return an independent iterator over items in random order
@@ -162,8 +168,10 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
         int n = 5;
         RandomizedQueue<Integer> queue = new RandomizedQueue<Integer>();
+
         for (int i = 0; i < n; i++)
             queue.enqueue(i);
+
         for (int a : queue) {
             for (int b : queue)
                 StdOut.print(a + "-" + b + " ");
@@ -185,11 +193,9 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         Item[] temp = (Item[]) new Object[max];
         int previousInsertCursor = insertCursor;
         insertCursor = 0;
-        for (int i = 0, j = 0; i < previousInsertCursor; i++) {
-            if (array[i] != null) {
-                temp[j++] = array[i];
-                insertCursor++;
-            }
+        for (int i = 0; i < previousInsertCursor; i++) {
+            if (array[i] != null)
+                temp[insertCursor++] = array[i];
         }
         array = temp;
 
@@ -205,7 +211,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         }
 
         public Item next() {
-            if (i < 0)
+            if (i <= 0)
                 throw new NoSuchElementException();
 
             return array[--i];
