@@ -11,19 +11,25 @@ import edu.princeton.cs.algs4.StdOut;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 
 public class BruteCollinearPoints {
 
     //ArrayList and LinkedList in java.util and Stack in algs4.jar are all allowed. Or you can implement data type yourself.
     private ArrayList<LineSegment> lineSegments = new ArrayList<>();
     private ArrayList<Double> slopeList = new ArrayList<Double>();
+    private ArrayList<Point> collinearPoints = new ArrayList<Point>();
     //keeps track of already added slopes
 
     // finds all line segments containing 4 points
     public BruteCollinearPoints(Point[] points) {
         if (points == null)
             throw new IllegalArgumentException();
+
+        for (Point p : points) {
+            if (p == null)
+                throw new IllegalArgumentException();
+        }
+
         //System.out.println(Arrays.toString(points));
         Arrays.sort(points, new Comparator<Point>() {
             public int compare(Point o1, Point o2) {
@@ -53,15 +59,20 @@ public class BruteCollinearPoints {
                                 && points[i].slopeTo(points[k]) == points[j].slopeTo(points[l])) {
                             //System.out.println("New Line Segment points: " + points[i].toString() + " "
                             // +points[j].toString() + " " + points[k].toString() +" " + points[l].toString());
+                            Point minPoint = minPoint(new Point[] {
+                                    points[i], points[j], points[k], points[l]
+                            });
 
-                            addLineSegmentIfAbsent(
-                                    minPoint(new Point[] {
-                                            points[i], points[j], points[k], points[l]
-                                    }),
-                                    maxPoint(new Point[] {
-                                            points[i], points[j], points[k], points[l]
-                                    }),
-                                    points[i].slopeTo(points[j]));
+                            Point maxPoint = maxPoint(new Point[] {
+                                    points[i], points[j], points[k], points[l]
+                            });
+                            Double slope = points[i].slopeTo(points[j]);
+
+                            if (!isLineSegmentExistent(minPoint, slope)) {
+                                lineSegments.add(new LineSegment(minPoint, maxPoint));
+                                collinearPoints.add(minPoint);
+                                slopeList.add(slope);
+                            }
                         }
 
                     }
@@ -101,12 +112,17 @@ public class BruteCollinearPoints {
     }
 
     // the line segments
-    public List<LineSegment> segments() {
+    public LineSegment[] segments() {
         if (lineSegments == null)
-            lineSegments = new ArrayList<>();
+            return null;
 
+        LineSegment[] segmentsResult = new LineSegment[lineSegments.size()];
 
-        return lineSegments;
+        for (int i = 0; i < segmentsResult.length; i++) {
+            segmentsResult[i] = lineSegments.get(i);
+        }
+
+        return segmentsResult;
     }
 
     public static void main(String[] args) {
@@ -145,5 +161,15 @@ public class BruteCollinearPoints {
             lineSegments.add(lineSegment);
             slopeList.add(slope);
         }
+    }
+
+    private boolean isLineSegmentExistent(Point collinearMin, double slope) {
+        for (int i = 0; i < collinearPoints.size(); i++) {
+            if (collinearPoints.get(i).compareTo(collinearMin) == 0)
+                if (slope == slopeList.get(i))
+                    return true;
+        }
+
+        return false;
     }
 }
