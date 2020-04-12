@@ -13,7 +13,7 @@ import java.util.Arrays;
 public final class Board {
 
     private final int[][] board;
-    private final int[][] goal;
+    //private final int[][] goal;
     private int[] zeroPosition;
     private int manhantanDistance = Integer.MIN_VALUE;
 
@@ -22,7 +22,6 @@ public final class Board {
     public Board(int[][] tiles) {
 
         board = new int[tiles.length][tiles.length];
-        goal = new int[tiles.length][tiles.length];
         zeroPosition = new int[2];
 
         for (int i = 0; i < board.length; i++) {
@@ -36,17 +35,6 @@ public final class Board {
             }
         }
 
-        int count = 1;
-        for (int i = 0; i < goal.length; i++) {
-            for (int j = 0; j < goal.length; j++) {
-                goal[i][j] = count++;
-
-            }
-        }
-
-        //place the blank
-        goal[tiles.length - 1][tiles.length - 1] = 0;
-
         //calculates Manhatan distance
         manhantanDistance = this.manhattan();
 
@@ -59,6 +47,7 @@ public final class Board {
 
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board.length; j++) {
+
                 stringBuilder
                         .append(board[i][j] < 10 ? " " + board[i][j] + " " : board[i][j] + " ");
             }
@@ -79,7 +68,7 @@ public final class Board {
 
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board.length; j++) {
-                if (board[i][j] != 0 && board[i][j] != goal[i][j])
+                if (board[i][j] != 0 && board[i][j] != goalValue(i, j, board.length))
                     count++;
             }
         }
@@ -108,7 +97,7 @@ public final class Board {
     public boolean isGoal() {
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board.length; j++) {
-                if (board[i][j] != goal[i][j])
+                if (board[i][j] != goalValue(i, j, board.length))
                     return false;
             }
         }
@@ -135,7 +124,22 @@ public final class Board {
         //check if boards have same length
         if (this.board.length != otherBoard.board.length)
             return false;
+
         //should I replace here by Arrays.deepEquals(a,b) ?
+        //for (int i = 0; i < board.length; i++) {
+        //    for (int j = 0; j < board.length; j++) {
+        //        if (board[i][j] != otherBoard.board[i][j])
+        //            return false;
+        //    }
+        //}
+
+        if (!Arrays.deepEquals(board, otherBoard.board)) {
+            return false;
+        }
+        else {
+
+        }
+
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board.length; j++) {
                 if (board[i][j] != otherBoard.board[i][j])
@@ -189,13 +193,13 @@ public final class Board {
      * @param tiles
      * @param i
      * @param j
-     * @param o
+     * @param p
      * @param k
      */
-    private void swap(int[][] tiles, int i, int j, int o, int k) {
+    private void swap(int[][] tiles, int i, int j, int p, int k) {
         int temp = tiles[i][j];
-        tiles[i][j] = tiles[o][k];
-        tiles[o][k] = temp;
+        tiles[i][j] = tiles[p][k];
+        tiles[p][k] = temp;
     }
 
     // a board that is obtained by exchanging any pair of tiles
@@ -208,16 +212,16 @@ public final class Board {
             }
         }
 
-        int i, j, o, k;
-        i = j = o = k = 0;
-        while (twinBoardTiles[i][j] == twinBoardTiles[o][k] || twinBoardTiles[i][j] == 0
-                || twinBoardTiles[o][k] == 0) {
+        int i, j, p, k;
+        i = j = p = k = 0;
+        while (twinBoardTiles[i][j] == twinBoardTiles[p][k] || twinBoardTiles[i][j] == 0
+                || twinBoardTiles[p][k] == 0) {
             i = StdRandom.uniform(twinBoardTiles.length - 1);
             j = StdRandom.uniform(twinBoardTiles.length - 1);
-            o = StdRandom.uniform(twinBoardTiles.length - 1);
+            p = StdRandom.uniform(twinBoardTiles.length - 1);
             k = StdRandom.uniform(twinBoardTiles.length - 1);
         }
-        swap(twinBoardTiles, i, j, o, k);
+        swap(twinBoardTiles, i, j, p, k);
 
         return new Board(twinBoardTiles);
     }
@@ -293,8 +297,6 @@ public final class Board {
         System.out.println("Twin board 5");
         System.out.println(initial.twin());
 
-        System.out.println("Check hamming");
-
     }
 
     /**
@@ -335,7 +337,7 @@ public final class Board {
      * @return
      */
     private int goalValue(int i, int j, int n) {
-        return n * i + j + 1;
+        return i == j && j == n - 1 ? 0 : n * i + j + 1;
     }
 
     /**
@@ -351,12 +353,12 @@ public final class Board {
         return Math.abs(i - o) + Math.abs(j - k);
     }
 
-    private int[][] cloneBoard(int[][] board) {
-        int[][] clonedBoard = new int[board.length][board.length];
+    private int[][] cloneBoard(int[][] boardToClone) {
+        int[][] clonedBoard = new int[boardToClone.length][boardToClone.length];
 
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board.length; j++) {
-                clonedBoard[i][j] = board[i][j];
+        for (int i = 0; i < boardToClone.length; i++) {
+            for (int j = 0; j < boardToClone.length; j++) {
+                clonedBoard[i][j] = boardToClone[i][j];
             }
         }
 

@@ -6,15 +6,15 @@
 
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.MinPQ;
-import edu.princeton.cs.algs4.Queue;
+import edu.princeton.cs.algs4.Stack;
 import edu.princeton.cs.algs4.StdOut;
 
 public final class Solver {
 
 
     private int moves;
-    private Board initialBoard;
-    private MinPQ<SearchNode> priorityQueue;
+    private final Board initialBoard;
+    private final MinPQ<SearchNode> priorityQueue = new MinPQ<>();
 
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
@@ -23,22 +23,35 @@ public final class Solver {
 
         initialBoard = initial;
         moves = 0;
-        priorityQueue = new MinPQ<>();
         priorityQueue.insert(new SearchNode(initial, moves, null));
-
         SearchNode minSearchNode; //top of the priority queue, to be removed in each interaction
         SearchNode previousSearchNode; //keeps track of the previousSearchNode to avoid adding it
 
         while (!priorityQueue.min().board.isGoal()) {
+            debug(priorityQueue, moves);
             moves++;
             minSearchNode = priorityQueue.delMin();
-            previousSearchNode = minSearchNode;
+            //previousSearchNode = minSearchNode;
             for (Board b : minSearchNode.board.neighbors()) {
-                if (!b.equals(previousSearchNode.board)) {
-                    priorityQueue.insert(new SearchNode(b, moves, previousSearchNode));
+                if (minSearchNode.previousNodeSearch == null || !b
+                        .equals(minSearchNode.previousNodeSearch.board)) {
+                    priorityQueue.insert(new SearchNode(b, moves, minSearchNode));
                 }
             }
         }
+        debug(priorityQueue, moves);
+    }
+
+    private void debug(MinPQ<SearchNode> priorityQueue, int moves) {
+        System.out.println("Step " + moves + ":");
+        priorityQueue.forEach(s ->
+                              {
+                                  System.out.println("priority  = " + s.priority + "  ");
+                                  System.out.println("moves     = " + s.moves + "  ");
+                                  System.out.println("manhattan = " + s.manhatanDistance + "  ");
+                                  System.out.println(s.board);
+                              });
+        System.out.println("---------------------------------");
     }
 
     // is the initial board solvable? (see below)
@@ -101,9 +114,9 @@ public final class Solver {
 
     // sequence of boards in a shortest solution
     public Iterable<Board> solution() {
-        Queue<Board> result = new Queue<>();
+        Stack<Board> result = new Stack<>();
         for (SearchNode searchNode : priorityQueue) {
-            result.enqueue(searchNode.board);
+            result.push(searchNode.board);
         }
         return result;
     }
@@ -138,22 +151,25 @@ public final class Solver {
         int moves;
         SearchNode previousNodeSearch;
         int manhatanDistance;
+        int priority;
 
         public SearchNode(Board board, int moves, SearchNode previousNodeSearch) {
             this.board = board;
             this.previousNodeSearch = previousNodeSearch;
             this.moves = moves;
             this.manhatanDistance = board.manhattan();
+            //calculate priority
+            this.priority = this.manhatanDistance + this.moves;
         }
 
-        public int compareTo(SearchNode o) {
-            if (o == null)
+        public int compareTo(SearchNode other) {
+            if (other == null)
                 return 1;
 
-            if (this.manhatanDistance + this.moves == o.manhatanDistance + o.moves)
+            if (this.priority == other.priority)
                 return 0;
 
-            return this.manhatanDistance + this.moves > o.manhatanDistance + o.moves ? 1 : -1;
+            return this.priority > other.priority ? 1 : -1;
         }
     }
 }
