@@ -76,9 +76,10 @@ public final class Board {
     // number of tiles out of place
     public int hamming() {
         int count = 0;
+
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board.length; j++) {
-                if (board[i][j] != goal[i][j])
+                if (board[i][j] != 0 && board[i][j] != goal[i][j])
                     count++;
             }
         }
@@ -94,8 +95,10 @@ public final class Board {
         int[] goalCoordinates;
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board.length; j++) {
-                goalCoordinates = goalCoordinates(board[i][j], board.length);
-                count += calculateDistance(goalCoordinates[0], goalCoordinates[1], i, j);
+                if (board[i][j] != 0) {
+                    goalCoordinates = goalCoordinates(board[i][j], board.length);
+                    count += calculateDistance(goalCoordinates[0], goalCoordinates[1], i, j);
+                }
             }
         }
         return count;
@@ -289,6 +292,8 @@ public final class Board {
         System.out.println(initial.twin());
         System.out.println("Twin board 5");
         System.out.println(initial.twin());
+
+        System.out.println("Check hamming");
 
     }
 

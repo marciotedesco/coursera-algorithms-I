@@ -12,9 +12,9 @@ import edu.princeton.cs.algs4.StdOut;
 public final class Solver {
 
 
-    int moves;
-    Board initialBoard;
-    MinPQ<SearchNode> priorityQueue;
+    private int moves;
+    private Board initialBoard;
+    private MinPQ<SearchNode> priorityQueue;
 
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
