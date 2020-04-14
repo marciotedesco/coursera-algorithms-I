@@ -11,10 +11,10 @@ import edu.princeton.cs.algs4.StdOut;
 
 public final class Solver {
 
-
     private int moves;
-    private final Board initialBoard;
-    private final MinPQ<SearchNode> priorityQueue = new MinPQ<>();
+    private final Board initialBoard; //TODO: remove it
+    private final boolean isSolvable;
+    private Stack<Board> solution;
 
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
@@ -22,24 +22,59 @@ public final class Solver {
             throw new IllegalArgumentException();
 
         initialBoard = initial;
-        moves = 0;
-        priorityQueue.insert(new SearchNode(initial, moves, null));
-        SearchNode minSearchNode; //top of the priority queue, to be removed in each interaction
-        SearchNode previousSearchNode; //keeps track of the previousSearchNode to avoid adding it
 
-        while (!priorityQueue.min().board.isGoal()) {
-            debug(priorityQueue, moves);
-            moves++;
-            minSearchNode = priorityQueue.delMin();
-            //previousSearchNode = minSearchNode;
-            for (Board b : minSearchNode.board.neighbors()) {
-                if (minSearchNode.previousNodeSearch == null || !b
-                        .equals(minSearchNode.previousNodeSearch.board)) {
-                    priorityQueue.insert(new SearchNode(b, moves, minSearchNode));
+        Board twinBoard = this.initialBoard.twin();
+        int movesIter = 0;
+
+        MinPQ<SearchNode> priorityQueueTwin = new MinPQ<>();
+        MinPQ<SearchNode> priorityQueueInitial = new MinPQ<>();
+
+        priorityQueueInitial.insert(new SearchNode(initialBoard, movesIter, null));
+        priorityQueueTwin.insert(new SearchNode(twinBoard, movesIter, null));
+
+        SearchNode minSearchNodeInitial;
+        SearchNode minSearchNodeTwin;
+
+        while (!priorityQueueInitial.min().board.isGoal() && !priorityQueueTwin.min().board
+                .isGoal()) {
+            //Try to solve initial
+            //debug(priorityQueue, moves);
+            movesIter++;
+
+            minSearchNodeInitial = priorityQueueInitial.delMin();
+
+            for (Board b : minSearchNodeInitial.board.neighbors()) {
+                if (minSearchNodeInitial.previousNodeSearch == null || !b
+                        .equals(minSearchNodeInitial.previousNodeSearch.board)) {
+                    priorityQueueInitial
+                            .insert(new SearchNode(b, movesIter, minSearchNodeInitial));
+                }
+            }
+
+            //Try to solve twin
+            //debug(priorityQueue, moves);
+
+            minSearchNodeTwin = priorityQueueTwin.delMin();
+
+            for (Board b : minSearchNodeTwin.board.neighbors()) {
+                if (minSearchNodeTwin.previousNodeSearch == null || !b
+                        .equals(minSearchNodeTwin.previousNodeSearch.board)) {
+                    priorityQueueTwin.insert(new SearchNode(b, movesIter, minSearchNodeTwin));
                 }
             }
         }
-        debug(priorityQueue, moves);
+        isSolvable = priorityQueueInitial.min().board.isGoal();
+        System.out.println("isSolvable: " + isSolvable);
+        if (isSolvable) {
+            moves = movesIter;
+            solution = new Stack<>();
+            for (SearchNode searchNode : priorityQueueInitial) {
+                solution.push(searchNode.board);
+            }
+        }
+
+
+        //debug(priorityQueue, moves);
     }
 
     private void debug(MinPQ<SearchNode> priorityQueue, int moves) {
@@ -54,57 +89,8 @@ public final class Solver {
         System.out.println("---------------------------------");
     }
 
-    // is the initial board solvable? (see below)
-    //That is one of the few techniques that can be used to show that a board can/can not be solved.
-    // Given a twin board, either original or twin board will be solvable but not both. Proof is not
-    // trivial/outside scope of this course.
-    //
-    // As defined in specification, you try to solve both of them, alternating one step at time on
-    // each and stop when either of these two boards is solved. If it is a twin board which was
-    // solved then original board has no solution.
     public boolean isSolvable() {
-        Board twinBoard = this.initialBoard.twin();
-        System.out.println("Twin board");
-        System.out.println(twinBoard);
-        int movesTwin = 0;
-        int movesInitial = 0;
-        MinPQ<SearchNode> priorityQueueTwin = new MinPQ<>();
-        MinPQ<SearchNode> priorityQueueInitial = new MinPQ<>();
-
-        priorityQueueInitial.insert(new SearchNode(initialBoard, movesInitial, null));
-        priorityQueueTwin.insert(new SearchNode(twinBoard, movesTwin, null));
-
-        SearchNode minSearchNodeInitial;
-        SearchNode previousSearchNodeInitial;
-
-        SearchNode minSearchNodeTwin;
-        SearchNode previousSearchNodeTwin;
-
-        while (!priorityQueueInitial.min().board.isGoal() && !priorityQueueTwin.min().board
-                .isGoal()) {
-            //Try to solve initial
-            movesInitial++;
-            minSearchNodeInitial = priorityQueueInitial.delMin();
-            previousSearchNodeInitial = minSearchNodeInitial;
-            for (Board b : minSearchNodeInitial.board.neighbors()) {
-                if (!b.equals(previousSearchNodeInitial.board)) {
-                    priorityQueueInitial
-                            .insert(new SearchNode(b, moves, previousSearchNodeInitial));
-                }
-            }
-
-            //Try to solve twin
-            movesTwin++;
-            minSearchNodeTwin = priorityQueueTwin.delMin();
-            previousSearchNodeTwin = minSearchNodeTwin;
-            for (Board b : minSearchNodeTwin.board.neighbors()) {
-                if (!b.equals(previousSearchNodeTwin.board)) {
-                    priorityQueueTwin.insert(new SearchNode(b, moves, previousSearchNodeTwin));
-                }
-            }
-        }
-
-        return priorityQueueInitial.min().board.isGoal();
+        return this.isSolvable;
     }
 
     // min number of moves to solve initial board
@@ -114,11 +100,7 @@ public final class Solver {
 
     // sequence of boards in a shortest solution
     public Iterable<Board> solution() {
-        Stack<Board> result = new Stack<>();
-        for (SearchNode searchNode : priorityQueue) {
-            result.push(searchNode.board);
-        }
-        return result;
+        return this.solution;
     }
 
     // test client (see below)

@@ -13,9 +13,10 @@ import java.util.Arrays;
 public final class Board {
 
     private final int[][] board;
-    //private final int[][] goal;
-    private int[] zeroPosition;
-    private int manhantanDistance = Integer.MIN_VALUE;
+    private int[] zeroPosition; //TODO: remove it
+    private final int manhantanDistance;
+    private Board twin;
+    private final int hamming;
 
     // create a board from an n-by-n array of tiles,
     // where tiles[row][col] = tile at (row, col)
@@ -36,7 +37,8 @@ public final class Board {
         }
 
         //calculates Manhatan distance
-        manhantanDistance = this.manhattan();
+        manhantanDistance = this.calculateManhattan();
+        hamming = this.calculateHamming();
 
     }
 
@@ -64,33 +66,12 @@ public final class Board {
 
     // number of tiles out of place
     public int hamming() {
-        int count = 0;
-
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board.length; j++) {
-                if (board[i][j] != 0 && board[i][j] != goalValue(i, j, board.length))
-                    count++;
-            }
-        }
-        return count;
+        return hamming;
     }
 
     // sum of Manhattan distances between tiles and goal
     public int manhattan() {
-        if (manhantanDistance != Integer.MIN_VALUE)
-            return manhantanDistance;
-
-        int count = 0;
-        int[] goalCoordinates;
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board.length; j++) {
-                if (board[i][j] != 0) {
-                    goalCoordinates = goalCoordinates(board[i][j], board.length);
-                    count += calculateDistance(goalCoordinates[0], goalCoordinates[1], i, j);
-                }
-            }
-        }
-        return count;
+        return manhantanDistance;
     }
 
     // is this board the goal board?
@@ -125,6 +106,9 @@ public final class Board {
         if (this.board.length != otherBoard.board.length)
             return false;
 
+        if (!Arrays.deepEquals(this.board, otherBoard.board))
+            return false;
+
         //should I replace here by Arrays.deepEquals(a,b) ?
         //for (int i = 0; i < board.length; i++) {
         //    for (int j = 0; j < board.length; j++) {
@@ -133,19 +117,11 @@ public final class Board {
         //    }
         //}
 
-        if (!Arrays.deepEquals(board, otherBoard.board)) {
-            return false;
-        }
-        else {
+        //for (int i = 0; i < this.board.length; i++) {
+        //    if (!Arrays.deepEquals(this.board, otherBoard.board))
+        //        return false;
+        //}
 
-        }
-
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board.length; j++) {
-                if (board[i][j] != otherBoard.board[i][j])
-                    return false;
-            }
-        }
 
         return true;
     }
@@ -187,6 +163,35 @@ public final class Board {
         return neighborsList;
     }
 
+    // a board that is obtained by exchanging any pair of tiles
+    public Board twin() {
+        if (twin != null)
+            return twin;
+
+        int[][] twinBoardTiles = new int[board.length][board.length];
+
+        for (int i = 0; i < twinBoardTiles.length; i++) {
+            for (int j = 0; j < twinBoardTiles.length; j++) {
+                twinBoardTiles[i][j] = board[i][j];
+            }
+        }
+
+        int i, j, p, k;
+        i = j = p = k = 0;
+        while (twinBoardTiles[i][j] == twinBoardTiles[p][k] || twinBoardTiles[i][j] == 0
+                || twinBoardTiles[p][k] == 0) {
+            i = StdRandom.uniform(twinBoardTiles.length);
+            j = StdRandom.uniform(twinBoardTiles.length);
+            p = StdRandom.uniform(twinBoardTiles.length);
+            k = StdRandom.uniform(twinBoardTiles.length);
+        }
+        swap(twinBoardTiles, i, j, p, k);
+
+        twin = new Board(twinBoardTiles);
+
+        return twin;
+    }
+
     /**
      * Swap point on (i,j) by (o,k) one
      *
@@ -202,28 +207,30 @@ public final class Board {
         tiles[p][k] = temp;
     }
 
-    // a board that is obtained by exchanging any pair of tiles
-    public Board twin() {
-        int[][] twinBoardTiles = new int[board.length][board.length];
+    private int calculateHamming() {
+        int count = 0;
 
-        for (int i = 0; i < twinBoardTiles.length; i++) {
-            for (int j = 0; j < twinBoardTiles.length; j++) {
-                twinBoardTiles[i][j] = board[i][j];
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board.length; j++) {
+                if (board[i][j] != 0 && board[i][j] != goalValue(i, j, board.length))
+                    count++;
             }
         }
+        return count;
+    }
 
-        int i, j, p, k;
-        i = j = p = k = 0;
-        while (twinBoardTiles[i][j] == twinBoardTiles[p][k] || twinBoardTiles[i][j] == 0
-                || twinBoardTiles[p][k] == 0) {
-            i = StdRandom.uniform(twinBoardTiles.length - 1);
-            j = StdRandom.uniform(twinBoardTiles.length - 1);
-            p = StdRandom.uniform(twinBoardTiles.length - 1);
-            k = StdRandom.uniform(twinBoardTiles.length - 1);
+    private int calculateManhattan() {
+        int count = 0;
+        int[] goalCoordinates;
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board.length; j++) {
+                if (board[i][j] != 0) {
+                    goalCoordinates = goalCoordinates(board[i][j], board.length);
+                    count += calculateDistance(goalCoordinates[0], goalCoordinates[1], i, j);
+                }
+            }
         }
-        swap(twinBoardTiles, i, j, p, k);
-
-        return new Board(twinBoardTiles);
+        return count;
     }
 
     // unit testing (not graded)
@@ -237,65 +244,6 @@ public final class Board {
                 tiles[i][j] = in.readInt();
         Board initial = new Board(tiles);
         System.out.println(initial.toString());
-
-        //Test goalCoordinates;
-        System.out.println("Test goal coordinates for n: " + 4);
-        System.out.println(Arrays.toString(initial.goalCoordinates(1, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(2, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(3, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(4, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(5, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(6, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(7, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(8, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(9, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(10, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(11, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(12, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(13, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(14, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(15, 4)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(0, 4)));
-
-        //Test goalCoordinates;
-        System.out.println("Test goal coordinates for n: " + 5);
-        System.out.println(Arrays.toString(initial.goalCoordinates(1, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(2, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(3, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(4, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(5, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(6, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(7, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(8, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(9, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(10, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(11, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(12, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(13, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(14, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(15, 5)));
-        System.out.println(Arrays.toString(initial.goalCoordinates(16, 5)));
-
-        int k = 1;
-        for (Board board : initial.neighbors()) {
-            System.out.println("Neighbour " + k);
-            System.out.println(board.toString());
-            k++;
-        }
-
-        System.out.println("Board");
-        System.out.println(initial.toString());
-
-        System.out.println("Twin board 1");
-        System.out.println(initial.twin());
-        System.out.println("Twin board 2");
-        System.out.println(initial.twin());
-        System.out.println("Twin board 3");
-        System.out.println(initial.twin());
-        System.out.println("Twin board 4");
-        System.out.println(initial.twin());
-        System.out.println("Twin board 5");
-        System.out.println(initial.twin());
 
     }
 

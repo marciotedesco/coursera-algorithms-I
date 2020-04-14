@@ -3,6 +3,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /* *****************************************************************************
  *  Name:
@@ -118,6 +119,19 @@ public class SolverTest {
     }
 
     @Test
+    public void moves_puzzle3x3_08_8() {
+        Board board = getBoardFromFile("puzzle3x3-08.txt");
+
+        System.out.println("Initial board");
+        System.out.println(board.toString());
+
+        Solver solver = new Solver(board);
+        assertEquals(8, solver.moves());
+
+    }
+
+    @Test
+    @Ignore
     public void moves_puzzle3x3_10_10() {
         Board board = getBoardFromFile("puzzle3x3-10.txt");
 
@@ -130,6 +144,7 @@ public class SolverTest {
     }
 
     @Test
+    @Ignore
     public void moves_puzzle3x3_15_15() {
         Board board = getBoardFromFile("puzzle3x3-15.txt");
 
@@ -235,12 +250,11 @@ public class SolverTest {
     }
 
     @Test
-    @Ignore
     public void moves_puzzle4x4_10_10() {
         Board board = getBoardFromFile("puzzle4x4-10.txt");
 
         Solver solver = new Solver(board);
-        assertEquals(4, solver.moves());
+        assertEquals(10, solver.moves());
 
     }
 
@@ -254,12 +268,39 @@ public class SolverTest {
     }
 
     @Test
-    @Ignore
     public void moves_puzzle3x3_unsolvable() {
         Board board = getBoardFromFile("puzzle3x3-unsolvable.txt");
 
         Solver solver = new Solver(board);
-        assertEquals(4, solver.moves());
+        assertFalse(solver.isSolvable());
+
+    }
+
+
+    @Test
+    public void twins_puzzle2x2_unsolvable1() {
+        Board board = getBoardFromFile("puzzle2x2-unsolvable1.txt");
+
+        Solver solver = new Solver(board);
+        assertFalse(solver.isSolvable());
+
+    }
+
+    @Test
+    public void twins_puzzle2x2_unsolvable2() {
+        Board board = getBoardFromFile("puzzle2x2-unsolvable2.txt");
+
+        Solver solver = new Solver(board);
+        assertFalse(solver.isSolvable());
+
+    }
+
+    @Test
+    public void twins_puzzle2x2_unsolvable3() {
+        Board board = getBoardFromFile("puzzle2x2-unsolvable3.txt");
+
+        Solver solver = new Solver(board);
+        assertFalse(solver.isSolvable());
 
     }
 
