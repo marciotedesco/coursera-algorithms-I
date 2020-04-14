@@ -1,5 +1,4 @@
 import edu.princeton.cs.algs4.In;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -43,6 +42,23 @@ public class SolverTest {
 
         Solver solver = new Solver(board);
         assertEquals(1, solver.moves());
+
+    }
+
+    @Test
+    public void solution_puzzle3x3_02_initial_board_first() {
+        Board board = getBoardFromFile("puzzle3x3-02.txt");
+
+        System.out.println("Initial board");
+        System.out.println(board.toString());
+
+        Solver solver = new Solver(board);
+        System.out.println("Print boards");
+        for (Board b : solver.solution()) {
+            System.out.println(b);
+        }
+
+        assertEquals(board, solver.solution().iterator().next());
 
     }
 
@@ -131,7 +147,6 @@ public class SolverTest {
     }
 
     @Test
-    @Ignore
     public void moves_puzzle3x3_10_10() {
         Board board = getBoardFromFile("puzzle3x3-10.txt");
 
@@ -144,7 +159,6 @@ public class SolverTest {
     }
 
     @Test
-    @Ignore
     public void moves_puzzle3x3_15_15() {
         Board board = getBoardFromFile("puzzle3x3-15.txt");
 

@@ -24,13 +24,12 @@ public final class Solver {
         initialBoard = initial;
 
         Board twinBoard = this.initialBoard.twin();
-        int movesIter = 0;
 
         MinPQ<SearchNode> priorityQueueTwin = new MinPQ<>();
         MinPQ<SearchNode> priorityQueueInitial = new MinPQ<>();
 
-        priorityQueueInitial.insert(new SearchNode(initialBoard, movesIter, null));
-        priorityQueueTwin.insert(new SearchNode(twinBoard, movesIter, null));
+        priorityQueueInitial.insert(new SearchNode(initialBoard, 0, null));
+        priorityQueueTwin.insert(new SearchNode(twinBoard, 0, null));
 
         SearchNode minSearchNodeInitial;
         SearchNode minSearchNodeTwin;
@@ -38,8 +37,7 @@ public final class Solver {
         while (!priorityQueueInitial.min().board.isGoal() && !priorityQueueTwin.min().board
                 .isGoal()) {
             //Try to solve initial
-            //debug(priorityQueue, moves);
-            movesIter++;
+            //debug(priorityQueueInitial, priorityQueueInitial.min().moves);
 
             minSearchNodeInitial = priorityQueueInitial.delMin();
 
@@ -47,7 +45,8 @@ public final class Solver {
                 if (minSearchNodeInitial.previousNodeSearch == null || !b
                         .equals(minSearchNodeInitial.previousNodeSearch.board)) {
                     priorityQueueInitial
-                            .insert(new SearchNode(b, movesIter, minSearchNodeInitial));
+                            .insert(new SearchNode(b, minSearchNodeInitial.moves + 1,
+                                                   minSearchNodeInitial));
                 }
             }
 
@@ -59,20 +58,23 @@ public final class Solver {
             for (Board b : minSearchNodeTwin.board.neighbors()) {
                 if (minSearchNodeTwin.previousNodeSearch == null || !b
                         .equals(minSearchNodeTwin.previousNodeSearch.board)) {
-                    priorityQueueTwin.insert(new SearchNode(b, movesIter, minSearchNodeTwin));
+                    priorityQueueTwin.insert(new SearchNode(b, minSearchNodeTwin.moves + 1,
+                                                            minSearchNodeTwin));
                 }
             }
         }
         isSolvable = priorityQueueInitial.min().board.isGoal();
-        System.out.println("isSolvable: " + isSolvable);
         if (isSolvable) {
-            moves = movesIter;
+            moves = priorityQueueInitial.min().moves;
             solution = new Stack<>();
-            for (SearchNode searchNode : priorityQueueInitial) {
-                solution.push(searchNode.board);
+            SearchNode currentSearchNode = priorityQueueInitial.min();
+            while (!currentSearchNode.board.equals(initialBoard)) {
+                solution.push(currentSearchNode.board);
+                currentSearchNode = currentSearchNode.previousNodeSearch;
             }
-        }
 
+            solution.push(currentSearchNode.board);
+        }
 
         //debug(priorityQueue, moves);
     }
