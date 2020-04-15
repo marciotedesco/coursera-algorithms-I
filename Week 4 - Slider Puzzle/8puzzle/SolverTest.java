@@ -11,7 +11,19 @@ import static org.junit.Assert.assertFalse;
  **************************************************************************** */
 public class SolverTest {
 
+
+    //unsolvable
+
     @Test
+    public void moves_puzzle2x2_unsolvable2_minus1() {
+        Board board = getBoardFromFile("puzzle2x2-unsolvable2.txt");
+
+        Solver solver = new Solver(board);
+        assertEquals(-1, solver.moves());
+    }
+
+    @Test
+
     public void moves_puzzle04_test() {
         Board board = getBoardFromFile("puzzle04.txt");
         System.out.println("Initial board");
@@ -287,7 +299,6 @@ public class SolverTest {
 
         Solver solver = new Solver(board);
         assertFalse(solver.isSolvable());
-
     }
 
 

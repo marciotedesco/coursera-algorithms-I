@@ -12,7 +12,6 @@ import edu.princeton.cs.algs4.StdOut;
 public final class Solver {
 
     private int moves;
-    private final Board initialBoard; //TODO: remove it
     private final boolean isSolvable;
     private Stack<Board> solution;
 
@@ -21,14 +20,12 @@ public final class Solver {
         if (initial == null)
             throw new IllegalArgumentException();
 
-        initialBoard = initial;
-
-        Board twinBoard = this.initialBoard.twin();
+        Board twinBoard = initial.twin();
 
         MinPQ<SearchNode> priorityQueueTwin = new MinPQ<>();
         MinPQ<SearchNode> priorityQueueInitial = new MinPQ<>();
 
-        priorityQueueInitial.insert(new SearchNode(initialBoard, 0, null));
+        priorityQueueInitial.insert(new SearchNode(initial, 0, null));
         priorityQueueTwin.insert(new SearchNode(twinBoard, 0, null));
 
         SearchNode minSearchNodeInitial;
@@ -68,19 +65,19 @@ public final class Solver {
             moves = priorityQueueInitial.min().moves;
             solution = new Stack<>();
             SearchNode currentSearchNode = priorityQueueInitial.min();
-            while (!currentSearchNode.board.equals(initialBoard)) {
+            while (currentSearchNode != null) {
                 solution.push(currentSearchNode.board);
                 currentSearchNode = currentSearchNode.previousNodeSearch;
             }
-
-            solution.push(currentSearchNode.board);
         }
+        else
+            moves = -1;
 
         //debug(priorityQueue, moves);
     }
 
-    private void debug(MinPQ<SearchNode> priorityQueue, int moves) {
-        System.out.println("Step " + moves + ":");
+    private void debug(MinPQ<SearchNode> priorityQueue, int movesStep) {
+        System.out.println("Step " + movesStep + ":");
         priorityQueue.forEach(s ->
                               {
                                   System.out.println("priority  = " + s.priority + "  ");

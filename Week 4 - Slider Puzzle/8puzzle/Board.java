@@ -13,24 +13,24 @@ import java.util.Arrays;
 public final class Board {
 
     private final int[][] board;
-    private int[] zeroPosition; //TODO: remove it
     private final int manhantanDistance;
-    private Board twin;
     private final int hamming;
+    private Board twin;
+    private int iZeroPosition;
+    private int jZeroPosition;
 
     // create a board from an n-by-n array of tiles,
     // where tiles[row][col] = tile at (row, col)
     public Board(int[][] tiles) {
 
         board = new int[tiles.length][tiles.length];
-        zeroPosition = new int[2];
 
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board.length; j++) {
                 board[i][j] = tiles[i][j];
                 if (board[i][j] == 0) {
-                    zeroPosition[0] = i;
-                    zeroPosition[1] = j;
+                    iZeroPosition = i;
+                    jZeroPosition = j;
                 }
 
             }
@@ -109,54 +109,39 @@ public final class Board {
         if (!Arrays.deepEquals(this.board, otherBoard.board))
             return false;
 
-        //should I replace here by Arrays.deepEquals(a,b) ?
-        //for (int i = 0; i < board.length; i++) {
-        //    for (int j = 0; j < board.length; j++) {
-        //        if (board[i][j] != otherBoard.board[i][j])
-        //            return false;
-        //    }
-        //}
-
-        //for (int i = 0; i < this.board.length; i++) {
-        //    if (!Arrays.deepEquals(this.board, otherBoard.board))
-        //        return false;
-        //}
-
-
         return true;
     }
 
     // all neighboring boards
     public Iterable<Board> neighbors() {
         Stack<Board> neighborsList = new Stack<>();
-
         //iterating the 4 neighbors
 
         //neighbor 1
-        if (zeroPosition[0] - 1 >= 0 && zeroPosition[0] - 1 < board.length) {
+        if (iZeroPosition - 1 >= 0 && iZeroPosition - 1 < board.length) {
             int[][] tiles = cloneBoard(board);
-            swap(tiles, zeroPosition[0], zeroPosition[1], zeroPosition[0] - 1, zeroPosition[1]);
+            swap(tiles, iZeroPosition, jZeroPosition, iZeroPosition - 1, jZeroPosition);
             neighborsList.push(new Board(tiles));
         }
 
         //neighbor 2
-        if (zeroPosition[1] - 1 >= 0 && zeroPosition[1] - 1 < board.length) {
+        if (jZeroPosition - 1 >= 0 && jZeroPosition - 1 < board.length) {
             int[][] tiles = cloneBoard(board);
-            swap(tiles, zeroPosition[0], zeroPosition[1], zeroPosition[0], zeroPosition[1] - 1);
+            swap(tiles, iZeroPosition, jZeroPosition, iZeroPosition, jZeroPosition - 1);
             neighborsList.push(new Board(tiles));
         }
 
         //neighbor 3
-        if (zeroPosition[0] + 1 >= 0 && zeroPosition[0] + 1 < board.length) {
+        if (iZeroPosition + 1 >= 0 && iZeroPosition + 1 < board.length) {
             int[][] tiles = cloneBoard(board);
-            swap(tiles, zeroPosition[0], zeroPosition[1], zeroPosition[0] + 1, zeroPosition[1]);
+            swap(tiles, iZeroPosition, jZeroPosition, iZeroPosition + 1, jZeroPosition);
             neighborsList.push(new Board(tiles));
         }
 
         //neighbor 4
-        if (zeroPosition[1] + 1 >= 0 && zeroPosition[1] + 1 < board.length) {
+        if (jZeroPosition + 1 >= 0 && jZeroPosition + 1 < board.length) {
             int[][] tiles = cloneBoard(board);
-            swap(tiles, zeroPosition[0], zeroPosition[1], zeroPosition[0], zeroPosition[1] + 1);
+            swap(tiles, iZeroPosition, jZeroPosition, iZeroPosition, jZeroPosition + 1);
             neighborsList.push(new Board(tiles));
         }
 
