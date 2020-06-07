@@ -32,6 +32,15 @@ public class KdTree {
             this.p = p;
             this.rect = rectHV;
         }
+
+        public String toString() {
+            return "Node{" +
+                    "p=" + p +
+                    ", rect=" + rect +
+                    ", lb=" + lb +
+                    ", rt=" + rt +
+                    '}';
+        }
     }
 
     private enum Orientation {
@@ -45,11 +54,12 @@ public class KdTree {
     // construct an empty set of points
     public KdTree() {
         root = new Node();
+        size = 0;
     }
 
     // is the set empty?
     public boolean isEmpty() {
-        return root == null;
+        return size == 0;
     }
 
     // number of points in the set
@@ -59,6 +69,9 @@ public class KdTree {
 
     // add the point to the set (if it is not already in the set)
     public void insert(Point2D p) {
+        if (p == null)
+            throw new IllegalArgumentException("Point2D is null");
+
         root = put(root, Orientation.VERTICAL, null, p);
     }
 
@@ -67,6 +80,7 @@ public class KdTree {
         // Otherwise, add new node to subtree associating key with val. if (x == null) return new Node(key, val, 1);
 
         if (x == null || x.p == null) {
+            size++;
             if (parentNode == null)
                 return new Node(p, new RectHV(0.0, 0.0, 1.0, 1.0));
             else {
@@ -102,39 +116,88 @@ public class KdTree {
                 }
             }
         }
+
         int cmp = orientation == Orientation.HORIZONTAL ? Point2D.Y_ORDER.compare(p, x.p) :
                   Point2D.X_ORDER.compare(p, x.p);
 
 
-        if (cmp < 0)//|| (cmp == 0 && Point2D.X_ORDER.compare(p, x.p) != 0))
+        if (cmp < 0)
             x.lb = put(x.lb, orientation == Orientation.HORIZONTAL ? Orientation.VERTICAL :
                              Orientation.HORIZONTAL, x, p);
 
-        else if (cmp > 0)//|| (cmp == 0 && Point2D.Y_ORDER.compare(p, x.p) != 0))
+        else if (cmp > 0)
             x.rt = put(x.rt, orientation == Orientation.HORIZONTAL ? Orientation.VERTICAL :
                              Orientation.HORIZONTAL, x, p);
-        else x.p = p;
+        else if (cmp == 0 && Point2D.Y_ORDER.compare(p, x.p) == 0
+                && Point2D.X_ORDER.compare(p, x.p) == 0) {
+            x.p = p;
+        }
+        else { //cmp == 0
+            if (orientation == Orientation.HORIZONTAL)
+                if (Point2D.Y_ORDER.compare(p, x.p) < 0) {
+                    x.lb = put(x.lb, Orientation.VERTICAL, x, p);
+                }
+                else {
+                    x.rt = put(x.rt, Orientation.VERTICAL, x, p);
+                }
+            else { // orientation is vertical
+                if (Point2D.X_ORDER.compare(p, x.p) < 0) {
+                    x.lb = put(x.lb, Orientation.HORIZONTAL, x, p);
+                }
+                else {
+                    x.rt = put(x.rt, Orientation.HORIZONTAL, x, p);
+                }
+            }
+        }
 
         return x;
     }
 
     // does the set contain point p?
     public boolean contains(Point2D p) {
-        Node currentNode = root;
-        while (currentNode != null && currentNode.p != p) {
-            if (currentNode.p == p)
-                break;
-            else if (currentNode.p.compareTo(p) < 0) {
-                currentNode = currentNode.lb;
-            }
-            else if (currentNode.p.compareTo(p) > 0) {
-                currentNode = currentNode.rt;
+        if (p == null)
+            throw new IllegalArgumentException("Poin2D is null");
+
+        return contains(root, Orientation.VERTICAL, p);
+    }
+
+    private boolean contains(Node x, Orientation orientation, Point2D s) {
+        if (x == null || x.p == null) {
+            return false;
+        }
+
+        int cmp = orientation == Orientation.HORIZONTAL ? Point2D.Y_ORDER.compare(s, x.p) :
+                  Point2D.X_ORDER.compare(s, x.p);
+
+
+        if (cmp == 0 && Point2D.Y_ORDER.compare(s, x.p) == 0
+                && Point2D.X_ORDER.compare(s, x.p) == 0) {
+            return true;
+        }
+        else if (cmp < 0)
+            return contains(x.lb, orientation == Orientation.HORIZONTAL ? Orientation.VERTICAL :
+                                  Orientation.HORIZONTAL, s);
+
+        else if (cmp > 0)
+            return contains(x.rt, orientation == Orientation.HORIZONTAL ? Orientation.VERTICAL :
+                                  Orientation.HORIZONTAL, s);
+        else {
+            if (orientation == Orientation.HORIZONTAL)
+                if (Point2D.Y_ORDER.compare(s, x.p) < 0) {
+                    return contains(x.lb, Orientation.VERTICAL, s);
+                }
+                else {
+                    return contains(x.rt, Orientation.VERTICAL, s);
+                }
+            else { // orientation is vertical
+                if (Point2D.X_ORDER.compare(s, x.p) < 0) {
+                    return contains(x.lb, Orientation.HORIZONTAL, s);
+                }
+                else {
+                    return contains(x.rt, Orientation.HORIZONTAL, s);
+                }
             }
         }
-        if (currentNode != null)
-            System.out.println(currentNode.toString());
-
-        return currentNode != null;
     }
 
     // draw all points to standard draw
@@ -177,6 +240,11 @@ public class KdTree {
 
     // all points that are inside the rectangle (or on the boundary)
     public Iterable<Point2D> range(RectHV rect) {
+        if (rect == null) {
+            throw new IllegalArgumentException("node and rect should be non-null arguments");
+        }
+        if (root == null || this.isEmpty())
+            return null;
 
         return range(root, rect);
     }
@@ -187,25 +255,60 @@ public class KdTree {
 
         if (node != null) {
             if (node.rect.intersects(rect)) {
-                if (node.p.y() < rect.ymax() && node.p.y() > rect.ymin() && node.p.x() < rect.xmax()
-                        && node.p.x() > rect.xmin()) {
+                if (rect.contains(node.p)) {
                     //inside the retangle
                     result.add(node.p);
                 }
 
             }
+
+            result.addAll(range(node.lb, rect));
+
+            result.addAll(range(node.rt, rect));
         }
 
-        result.addAll(range(node.lb, rect));
-
-        result.addAll(range(node.rt, rect));
 
         return result;
     }
 
     // a nearest neighbor in the set to point p; null if the set is empty
     public Point2D nearest(Point2D p) {
-        return null;
+        if (p == null)
+            throw new IllegalArgumentException("Point2D is null");
+
+        if (root == null || this.isEmpty())
+            return null;
+
+        return nearest(root, p, null, Integer.MIN_VALUE);
+    }
+
+    private Point2D nearest(Node x, Point2D p, Point2D closest, double distanceToClosest) {
+        if (x == null)
+            return closest;
+
+        if (closest == null) {
+            closest = x.p;
+            distanceToClosest = x.p.distanceSquaredTo(p);
+        }
+        else {
+            double distanceToCurrent = x.p.distanceSquaredTo(p);
+
+            if (distanceToCurrent < distanceToClosest) {
+                distanceToClosest = distanceToCurrent;
+                closest = x.p;
+            }
+        }
+
+        Point2D candidate1 = nearest(x.lb, p, closest, distanceToClosest);
+
+        Point2D candidate2 = nearest(x.rt, p, closest, distanceToClosest);
+
+        if (candidate1.distanceSquaredTo(p) < candidate2.distanceSquaredTo(p)) {
+            return candidate1;
+        }
+        else
+            return candidate2;
+
     }
 
     // unit testing of the methods (optional)
